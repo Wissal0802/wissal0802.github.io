@@ -565,7 +565,72 @@ where years is not null)
 select*
 from company_year_rank
 where ranking <=5;
+
+-- Total layoffs by year
+ SELECT 
+    YEAR(`date`) AS year,
+    SUM(total_laid_off) AS total_laid_off
+FROM layoffs_staging2
+WHERE `date` IS NOT NULL
+GROUP BY YEAR(`date`)
+ORDER BY year;
  
+
+ -- Top 10 companies by total layoffs
+SELECT 
+    company,
+    SUM(total_laid_off) AS total_laid_off
+FROM layoffs_staging2
+WHERE company IS NOT NULL
+GROUP BY company
+ORDER BY total_laid_off DESC
+LIMIT 10;
+
+-- Top industries by layoffs
+SELECT 
+    industry,
+    SUM(total_laid_off) AS total_laid_off
+FROM layoffs_staging2
+WHERE industry IS NOT NULL
+GROUP BY industry
+ORDER BY total_laid_off DESC
+LIMIT 10;
+
+-- Top countries by layoffs
+SELECT 
+    country,
+    SUM(total_laid_off) AS total_laid_off
+FROM layoffs_staging2
+WHERE country IS NOT NULL
+GROUP BY country
+ORDER BY total_laid_off DESC
+LIMIT 10;
+
+
+
+
+-- Top 5 companies for each year
+WITH company_year AS (
+    SELECT 
+        company,
+        YEAR(`date`) AS year,
+        SUM(total_laid_off) AS total_laid_off
+    FROM layoffs_staging2
+    WHERE `date` IS NOT NULL
+    GROUP BY company, YEAR(`date`)
+),
+company_year_rank AS (
+    SELECT *,
+        DENSE_RANK() OVER (
+            PARTITION BY year 
+            ORDER BY total_laid_off DESC
+        ) AS ranking
+    FROM company_year
+)
+SELECT *
+FROM company_year_rank
+WHERE ranking <= 5
+ORDER BY year, ranking;
 
 
  
